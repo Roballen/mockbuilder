@@ -1,17 +1,20 @@
 var _ = require("lodash"),
-    fs = require("fs"),
-    requirejs = require("requirejs"),
-    harString = "";
+  fs = require("fs"),
+  requirejs = require("requirejs"),
+  harString = "";
 
 if (process.argv.length !== 3) {
-    process.abort();
+  console.log(process.argv);
+  process.abort();
 }
 
 
-requirejs(["HARParser", "text!sinon_fake_server.hb", "config"], function (harParser, testTemplate, config) {
-   fs.readFile(process.argv[2], function (error, harString) {
-        var outputFile = process.argv[2].replace(/hars\/(.*).har/, config.outputLocation + "/$1.js");
-        fs.writeFile(outputFile, harParser.parse(testTemplate, JSON.parse(harString), config.url));
-    });
 
+requirejs(["HARParser", "text!sinon_fake_server.hb", "text!nock_fake_server.hb", "config"], function(harParser, sinonTemplate, nockTemplate, config) {
+  console.log(process.argv[2]);
+  var template = config.template == 'nock' ? nockTemplate : sinonTemplate;
+  fs.readFile(process.argv[2], function(error, harString) {
+    var outputFile = process.argv[2].replace(/hars\/(.*).har/, config.outputLocation + "/" + config.template + "$1.js");
+    fs.writeFile(outputFile, harParser.parse(template, JSON.parse(harString), config));
+  });
 });
