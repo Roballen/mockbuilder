@@ -6,6 +6,8 @@ define(["handlebars", "lodash", "url"],
       parse: function(testTemplate, harData, config) {
         var url = config.url;
         var compiledTemplate = Handlebars.compile(testTemplate);
+        var alreadyMapped = [];
+
         harData.url = config.url;
         harData.log.entries =
           _(harData.log.entries)
@@ -20,31 +22,32 @@ define(["handlebars", "lodash", "url"],
             e.response.content.text = JSON.stringify(e.response.content.text);
             // add a flag to help with handling trailing commas
             e.response.headers[e.response.headers.length - 1].last = true;
-
+            if ( config.template == 'nock' ) {
+              e.request.method = e.request.method.toLowerCase();
+            }
             //parse the url for better control over mocking
             var parsedUrl = nodeUrl.parse(e.request.url, true);
-            console.log(parsedUrl);
+            //console.log(parsedUrl.pathname);
+
+            if ( _.indexOf(alreadyMapped, parsedUrl.pathname) < 0 ) {
+              alreadyMapped.push(parsedUrl.pathname)
+            }
+            else {
+              return;
+            }
+
             e.request.host = parsedUrl.host;
 
             parsedUrl.requestParams = _.each(Object.keys(parsedUrl.query), function(query) {
-              console.log(_.indexOf(config.ignoreQueryParams, query));
               if (_.indexOf(config.ignoreQueryParams, query) < 0) {
-                console.log('adding:' + query)
                 if (!parsedUrl.requestParams) {
                   parsedUrl.requestParams = {};
                 }
                 parsedUrl.requestParams[query] = parsedUrl.query[query];
               }
             });
-
-            //  _(Object.keys(parsedUrl.query)).map(function(query) {
-            //   if (!_(config.ignoreQueryParams).contains(query)) {
-            //     return {
-            //       'key': query,
-            //       'value': parsedUrl.query[query],
-            //     };
-            //   }
-            // });
+            //"string".replace(/\//g, 'ForwardSlash');
+            parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, "").replace(/\//g,'\\/');
 
             e.request.url = parsedUrl;
 
@@ -53,7 +56,16 @@ define(["handlebars", "lodash", "url"],
             }
             return e;
           })
+          .filter(function(e) {
+            return e;
+          })
+          .sortBy(function(e) {
+            return e.request.url.pathname;
+          })
           .value();
+
+
+          _.each(harData.log.entries, function(it) { console.log(it.request.url.pathname); })
 
         return compiledTemplate(harData);
       },

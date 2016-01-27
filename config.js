@@ -7,7 +7,7 @@ define(['module'], function(module) {
       'token',
       'api_key'
     ], //these will no be used when matching the url, supported on Nock only at the moment
-    'template': 'nock', //supports nock, sinon
+    'template': 'sinon', //supports nock, sinon
     'outputLocation': 'mocks', //change to the location where you want to save the mocks
   };
 });

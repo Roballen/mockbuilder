@@ -8,8 +8,6 @@ if (process.argv.length !== 3) {
   process.abort();
 }
 
-
-
 requirejs(["HARParser", "text!sinon_fake_server.hb", "text!nock_fake_server.hb", "config"], function(harParser, sinonTemplate, nockTemplate, config) {
   console.log(process.argv[2]);
   var template = config.template == 'nock' ? nockTemplate : sinonTemplate;
