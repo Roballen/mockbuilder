@@ -22,6 +22,13 @@ define(["handlebars", "lodash", "url"],
             e.response.content.text = JSON.stringify(e.response.content.text);
             // add a flag to help with handling trailing commas
             e.response.headers[e.response.headers.length - 1].last = true;
+
+            e.response.headers = e.response.headers.filter(function(e) {
+              if (_.indexOf(config.ignoreHeaders, e.name) < 0) {
+                return e;
+              }
+            });
+
             if ( config.template == 'nock' ) {
               e.request.method = e.request.method.toLowerCase();
             }
