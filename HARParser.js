@@ -6,7 +6,7 @@ define(["handlebars", "lodash", "url"],
       parse: function(testTemplate, harData, config) {
         var url = config.url;
         var compiledTemplate = Handlebars.compile(testTemplate);
-        var alreadyMapped = [];
+        harData.alreadyMapped = [];
 
         harData.url = config.url;
         harData.log.entries =
@@ -18,6 +18,13 @@ define(["handlebars", "lodash", "url"],
             });
           })
           .map(function(e) {
+            //parse the url for better control over mocking
+            var parsedUrl = nodeUrl.parse(e.request.url, true);
+
+            if (_.indexOf(config.ignoreUrls, parsedUrl.pathname) > 0) {
+              return;
+            }
+
             // put the response back in JSON so it will be safe to embed in the Javascript directly
             e.response.content.text = JSON.stringify(e.response.content.text);
             // add a flag to help with handling trailing commas
@@ -32,14 +39,14 @@ define(["handlebars", "lodash", "url"],
             if ( config.template == 'nock' ) {
               e.request.method = e.request.method.toLowerCase();
             }
-            //parse the url for better control over mocking
-            var parsedUrl = nodeUrl.parse(e.request.url, true);
+
             //console.log(parsedUrl.pathname);
 
-            if ( _.indexOf(alreadyMapped, parsedUrl.pathname) < 0 ) {
-              alreadyMapped.push(parsedUrl.pathname)
+            if ( _.indexOf(harData.alreadyMapped, parsedUrl.pathname) < 0 ) {
+              harData.alreadyMapped.push(parsedUrl.pathname)
             }
             else {
+              console.log(`done been mapped${parsedUrl.pathname}`);
               return;
             }
 
